@@ -119,7 +119,7 @@ app.post("/api/messages", async (req, res) => {
     try {
         const { conversationId, senderId, message, receiverId = ''} = req.body;
         if(!senderId || !message) return res.status(400).send('please fill all required fields')
-        if(!conversationId && receiverId) {
+        if(conversationId === 'new' && receiverId) {
             const newConversation = new Conversations({ members: [senderId, receiverId]});
             await newConversation.save();
             const newMessage = new Messages({ conversationId: newConversation._id, senderId, message});

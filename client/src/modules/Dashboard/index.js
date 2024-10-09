@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react'
 import Input from '../../components/Input'
-import { estimatedDocumentCount } from '../../../../server/modals/users'
 
 const Dashboard = () => {
 
@@ -9,8 +8,10 @@ const Dashboard = () => {
   const [conversations, setConversations] = useState([])
   const [messages, setMessages] = useState({})
   const [message, setMessage] = useState('')
+  const [users, setUsers] = useState([]);
   console.log('user >>:', user);
   console.log('conversations :>>', conversations);
+  console.log('users >>:', users);
 
   useEffect(() => {
     const loggedInUser = JSON.parse(localStorage.getItem('user:detail'))
@@ -28,9 +29,23 @@ const Dashboard = () => {
     fetchConversations()
   }, [])
 
+  useEffect(() => {
+    const fetchUsers = async () => {
+      const res = await fetch('http://localhost:8000/api/users', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      const resData = await res.json()
+      setUsers(resData)
+    }
+    fetchUsers()
+  }, [])
+
 
   const fetchMessages = async (conversationId, user) => {
-    const res = await fetch(`http://localhost:8000/api/message/${conversationId}`, {
+    const res = await fetch(`http://localhost:8000/api/messages/${conversationId}`, {
       method: "GET",
       headers: {
         'Content-Type': 'application/json',
@@ -42,20 +57,20 @@ const Dashboard = () => {
   }
 
   const sendMessage = async (e) => {
-    const res = await fetch(`http://localhost:8000/api/message`, {
+    const res = await fetch(`http://localhost:8000/api/messages`, {
       method: 'POST',
       headers: {
         'Content-Type': 'applicaion/json'
       },
       body: JSON.stringify({
-        conversationId: messages?.conversationId?.id,
+        conversationId: messages?.conversationId,
         senderId: user?.id,
         message,
-        receiverId: messages?.receiver?.id
+        receiverId: messages?.receiver?.receiverId
       })
     });
-    // const resData = await res.json()
-    // console.log('resData', resData);
+    const resData = await res.json()
+    console.log('resData', resData);
     setMessage('')
   }
 
@@ -74,7 +89,7 @@ const Dashboard = () => {
         <div className='text-primary text-lg'>Message</div>
         <div>
           {
-            !conversations.length > 0 ?
+            conversations.length > 0 ?
           conversations.map(({ conversationId, user}) => {
             return (
               <div className='flex items-center py-2 border-b border-b-gray-300'>
@@ -130,7 +145,7 @@ const Dashboard = () => {
         {
           messages?.receiver?.fullName &&
           <div className='px-8 py-4 w-full flex items-center'>
-          <Input placeholder='Type a Message' value={message} onChange={(e) => setMessages(e.target.value)} className='w-[75%]' inputClassName='p-2 shadow-md 
+          <Input placeholder='Type a Message' value={message} onChange={(e) => setMessage(e.target.value)} className='w-[75%]' inputClassName='p-2 shadow-md 
           rounded-full bg-light focus:ring-0 focus:border-0 outline-none'/>
           <div className={`ml-3 p-2 cursor-pointer bg-light rounded-full ${!message && 'pointer-events-none'}`} onClick={() => sendMessage()}>
           <svg  xmlns="http://www.w3.org/2000/svg"  width="20"  height="20"  viewBox="0 0 24 24"  fill="none"  
@@ -151,7 +166,27 @@ const Dashboard = () => {
         </div>
         }
       </div>
-      <div className='w-[25%] h-screen bg-light'></div>
+      <div className='w-[25%] h-screen bg-light'>
+      <div className='text-primary text-lg px-8 py-12'>People</div>
+      <div>
+          {
+            users.length > 0 ?
+          users.map(({ userId, user}) => {
+            return (
+              <div className='flex items-center py-2 border-b border-b-gray-300'>
+          <div className='flex cursor-pointer items-center' onClick={() => fetchMessages('new', user)}>
+            <div className='border border-primary p-[2px] rounded-full'><img src={"https://www.svgrepo.com/show/81103/avatar.svg"} width={25} height={25}/></div>
+          <div className='ml-6'>
+            <h3 className='text-xs'>{user?.fullName}</h3>
+            <p className='text-xs font-light text-gray-600'>{user?.email}</p>
+          </div>
+          </div>
+        </div>
+            )
+          }) : <div className='text-center text-lg font-semibold'>No Conversations</div>
+        }
+        </div>
+      </div>
     </div>
   )
 }
