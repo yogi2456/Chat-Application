@@ -4,10 +4,10 @@ import Dashboard from './modules/Dashboard';
 import Form from './modules/Form';
 
 
-const ProtectedRoute = ({ children}) => {
-  const isLoggedIn = localStorage.getItem("user:token") !== null || true;
+const ProtectedRoute = ({ children, auth=false}) => {
+  const isLoggedIn = localStorage.getItem("user:token") !== null || false;
 
-  if(!isLoggedIn) {
+  if(!isLoggedIn && auth) {
     return <Navigate to={"users/sign-in"}/>
   } else if(isLoggedIn && ['/users/sign-in', '/users/sign-up'].includes(window.location.pathname)) {
     return <Navigate to={'/'}/>
@@ -20,7 +20,7 @@ function App() {
   return (
    <Routes>
     <Route path='/' element={
-      <ProtectedRoute>
+      <ProtectedRoute auth={true}>
         <Dashboard/>
       </ProtectedRoute>
     }/>

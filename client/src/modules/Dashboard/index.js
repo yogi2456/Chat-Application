@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import Input from '../../components/Input'
 
 const Dashboard = () => {
@@ -35,13 +35,35 @@ const Dashboard = () => {
       image: "https://www.svgrepo.com/show/81103/avatar.svg"
     },
   ]
+
+  useEffect(() => {
+    const loggedInUser = JSON.parse(localStorage.getItem('user:detail'))
+    const fetchConversations = async () => {
+      const res = await fetch(`http://localhost:8000/api/conversation/${loggedInUser?.id}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      const resData = await res.json();
+      console.log('resData >>:', resData)
+      setConversations(resData)
+    }
+    fetchConversations()
+  }, [])
+
+  const [user, setUser] = useState(JSON.parse(localStorage.getItem('user:detail')))
+  const [conversations, setConversations] = useState([])
+  console.log('user >>:', user);
+  console.log('conversations :>>', conversations);
+
   return (
     <div className='w-screen flex'>
       <div className='w-[25%] h-screen bg-secondary'>
         <div className='flex items-center my-6 mx-6'>
           <div className='border border-primary p-[2px] rounded-full'><img src='https://www.svgrepo.com/show/81103/avatar.svg' width={50} height={50}/></div>
           <div className='ml-6'>
-            <h3 className='text-xl'>Tutorials Dev</h3>
+            <h3 className='text-xl'>{user.fullName}</h3>
             <p className='text-xs font-light'>My Account</p>
           </div>
         </div>
@@ -49,19 +71,22 @@ const Dashboard = () => {
          <div className='mx-10 mt-6'>
         <div className='text-primary text-lg'>Message</div>
         <div>
-          {Contacts.map(({name, status, image}) => {
+          {
+            !conversations.length > 0 ?
+          conversations.map(({ conversationId, user}) => {
             return (
               <div className='flex items-center py-2 border-b border-b-gray-300'>
-          <div className='flex cursor-pointer items-center'>
-            <div className='border border-primary p-[2px] rounded-full'><img src={image} width={25} height={25}/></div>
+          <div className='flex cursor-pointer items-center' onClick={() => console.log("hello")}>
+            <div className='border border-primary p-[2px] rounded-full'><img src={"https://www.svgrepo.com/show/81103/avatar.svg"} width={25} height={25}/></div>
           <div className='ml-6'>
-            <h3 className='text-xs'>{name}</h3>
-            <p className='text-xs font-light text-gray-600'>{status}</p>
+            <h3 className='text-xs'>{user?.fullName}</h3>
+            <p className='text-xs font-light text-gray-600'>{user?.email}</p>
           </div>
           </div>
         </div>
             )
-          })}
+          }) : <div className='text-center text-lg font-semibold'>No Conversations</div>
+        }
         </div>
       </div>
       </div>
